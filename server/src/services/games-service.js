@@ -2,11 +2,13 @@ import { createHttpError } from "../errors/http-error.js";
 import { gamesRepository } from "../repositories/games-repository.js";
 
 export const gamesService = {
-  listGames(query = {}) {
+  async listGames(query = {}) {
     const search = query.search?.toLowerCase();
     const platform = query.platform?.toLowerCase();
 
-    return gamesRepository.findAll().filter((game) => {
+    const games = await gamesRepository.findAll();
+
+    return games.filter((game) => {
       const matchesSearch = search
         ? game.title.toLowerCase().includes(search)
         : true;
@@ -18,8 +20,8 @@ export const gamesService = {
     });
   },
 
-  getGame(gameId) {
-    const game = gamesRepository.findById(gameId);
+  async getGame(gameId) {
+    const game = await gamesRepository.findById(gameId);
 
     if (!game) {
       throw createHttpError(404, `Game not found: ${gameId}`);

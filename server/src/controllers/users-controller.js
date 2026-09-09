@@ -1,9 +1,15 @@
 import { usersService } from "../services/users-service.js";
 
 export const usersController = {
-  getCurrentUser(req, res) {
+  async getCurrentUser(req, res) {
     res.json({
-      data: usersService.getCurrentUser(req.user),
+      data: await usersService.getCurrentUser(req.user),
+    });
+  },
+
+  async getDashboard(req, res) {
+    res.json({
+      data: await usersService.getDashboard(req.user),
     });
   },
 };

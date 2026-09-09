@@ -3,12 +3,14 @@ import { gamesRepository } from "../repositories/games-repository.js";
 import { sessionsRepository } from "../repositories/sessions-repository.js";
 
 export const sessionsService = {
-  listSessions(query = {}) {
+  async listSessions(query = {}) {
     const gameId = query.gameId ? String(query.gameId) : undefined;
     const platform = query.platform?.toLowerCase();
     const type = query.type?.toLowerCase();
 
-    return sessionsRepository.findAll().filter((session) => {
+    const sessions = await sessionsRepository.findAll();
+
+    return sessions.filter((session) => {
       const matchesGame = gameId ? String(session.gameId) === gameId : true;
       const matchesPlatform = platform
         ? session.platform.toLowerCase().includes(platform)
@@ -19,8 +21,8 @@ export const sessionsService = {
     });
   },
 
-  getSession(sessionId) {
-    const session = sessionsRepository.findById(sessionId);
+  async getSession(sessionId) {
+    const session = await sessionsRepository.findById(sessionId);
 
     if (!session) {
       throw createHttpError(404, `Session not found: ${sessionId}`);
@@ -29,8 +31,8 @@ export const sessionsService = {
     return session;
   },
 
-  createSession(payload) {
-    const game = gamesRepository.findRecordById(payload.gameId);
+  async createSession(payload) {
+    const game = await gamesRepository.findRecordById(payload.gameId);
 
     if (!game) {
       throw createHttpError(422, "Cannot create a session for an unknown game.", {
@@ -40,7 +42,6 @@ export const sessionsService = {
 
     const maxPlayers = Number(payload.maxPlayers);
     const session = {
-      id: createSessionId(payload.title),
       platform: payload.platform,
       time: payload.time ?? "Flexible Time",
       title: payload.title.trim(),
@@ -55,13 +56,3 @@ export const sessionsService = {
     return sessionsRepository.create(session);
   },
 };
-
-function createSessionId(title) {
-  const slug = title
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-
-  return `${slug || "session"}-${Date.now()}`;
-}

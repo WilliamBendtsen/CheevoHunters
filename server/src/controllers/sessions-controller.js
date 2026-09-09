@@ -1,20 +1,20 @@
 import { sessionsService } from "../services/sessions-service.js";
 
 export const sessionsController = {
-  listSessions(req, res) {
+  async listSessions(req, res) {
     res.json({
-      data: sessionsService.listSessions(req.query),
+      data: await sessionsService.listSessions(req.query),
     });
   },
 
-  getSession(req, res) {
+  async getSession(req, res) {
     res.json({
-      data: sessionsService.getSession(req.params.sessionId),
+      data: await sessionsService.getSession(req.params.sessionId),
     });
   },
 
-  createSession(req, res) {
-    const session = sessionsService.createSession({
+  async createSession(req, res) {
+    const session = await sessionsService.createSession({
       ...req.body,
       host: req.user?.displayName,
     });

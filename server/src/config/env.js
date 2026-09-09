@@ -10,7 +10,8 @@ const toNumber = (value, fallback) => {
 export const env = {
   port: toNumber(process.env.PORT, 3001),
   clientOrigin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
-  dataProvider: process.env.DATA_PROVIDER ?? "mock",
+  dataProvider: process.env.DATA_PROVIDER ?? "supabase",
+  databaseUrl: process.env.DATABASE_URL ?? "",
   supabase: {
     url: process.env.SUPABASE_URL ?? "",
     anonKey: process.env.SUPABASE_ANON_KEY ?? "",
