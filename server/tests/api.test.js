@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 
+import { closeDb, db } from "../src/db/client.js";
 import { createApp } from "../src/app.js";
 
 let server;
@@ -28,6 +29,9 @@ after(async () => {
       resolve();
     });
   });
+
+  await db.query("delete from sessions where title like 'Backend API test session%'");
+  await closeDb();
 });
 
 describe("CheevoHunters API", () => {
@@ -37,15 +41,24 @@ describe("CheevoHunters API", () => {
 
     assert.equal(response.status, 200);
     assert.equal(body.data.status, "ok");
-    assert.equal(body.data.dataProvider, "mock");
+    assert.equal(body.data.dataProvider, process.env.DATA_PROVIDER ?? "supabase");
   });
 
-  it("returns the mock current user", async () => {
+  it("returns the current Supabase-backed user", async () => {
     const response = await fetch(`${baseUrl}/api/users/me`);
     const body = await response.json();
 
     assert.equal(response.status, 200);
     assert.equal(body.data.username, "pixelpulse");
+  });
+
+  it("returns Supabase-backed dashboard data", async () => {
+    const response = await fetch(`${baseUrl}/api/users/me/dashboard`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(body.data.stats.gamesFollowed > 0);
+    assert.ok(body.data.followingGames.length > 0);
   });
 
   it("lists games with serialized platform data", async () => {
@@ -67,7 +80,7 @@ describe("CheevoHunters API", () => {
     assert.ok(body.data.every((session) => session.gameId === 1));
   });
 
-  it("creates a session using the mock current user", async () => {
+  it("creates a session using the current Supabase-backed user", async () => {
     const response = await fetch(`${baseUrl}/api/sessions`, {
       method: "POST",
       headers: {
@@ -75,17 +88,17 @@ describe("CheevoHunters API", () => {
       },
       body: JSON.stringify({
         gameId: "1",
-        title: "Backend API test session",
+        title: `Backend API test session ${Date.now()}`,
         platform: "pc-steam",
         sessionType: "achievement",
         maxPlayers: "4",
-        description: "Verify the database-ready mock repository path.",
+        description: "Verify the Supabase-backed repository path.",
       }),
     });
     const body = await response.json();
 
     assert.equal(response.status, 201);
-    assert.equal(body.data.title, "Backend API test session");
+    assert.match(body.data.title, /^Backend API test session/);
     assert.equal(body.data.host, "PixelPulse");
     assert.equal(body.data.players, "1 / 4");
   });
