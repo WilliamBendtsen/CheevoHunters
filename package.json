@@ -9,13 +9,16 @@
     "dev:server": "nodemon --watch server --exec node server/index.js",
     "build": "vite build",
     "start": "node server/index.js",
-    "test:server": "node --test server/tests/*.test.js"
+    "test:server": "node --test server/tests/*.test.js",
+    "db:schema": "node server/scripts/run-sql-file.js server/db/schema.sql",
+    "db:seed": "node server/scripts/run-sql-file.js server/db/seed.sql"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "concurrently": "^8.2.0",
+    "cors": "^2.8.5",
     "express": "^4.18.2",
     "nodemon": "^3.0.1",
+    "pg": "^8.23.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router-dom": "^6.30.6"

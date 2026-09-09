@@ -1,19 +1,10 @@
 # Database Plan
 
-The backend currently runs with `DATA_PROVIDER=mock`. The mock store is shaped to match the planned Supabase/Postgres tables, so repositories can later switch data sources without changing controllers or route handlers.
+The backend now reads from Supabase/Postgres. The earlier local JavaScript mock data was migrated into the database and removed from the backend runtime.
 
-## Current Mode
+## Supabase Mode
 
-No Supabase variables are needed for mock data.
-
-The mock data lives in:
-
-- `server/src/data/mock-data.js`: original demo content.
-- `server/src/data/mock-store.js`: relational-style mock state used by repositories.
-
-## Future Supabase Mode
-
-When moving to Supabase, create a Supabase project and run:
+For a fresh Supabase project, run:
 
 1. `server/db/schema.sql`
 2. `server/db/seed.sql`
@@ -29,6 +20,15 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 `DATABASE_URL` is useful for direct Postgres tools, migrations, or Prisma later. The Supabase URL and anon key are useful for normal API access. Use the service role key only on the backend for privileged operations such as admin seed scripts, and never expose it to the browser.
+
+If `DATABASE_URL` fails to connect, copy the connection string from Supabase's database connection settings again. The pooled connection string is often the easiest option for local development because it avoids direct database networking issues.
+
+Helpful scripts:
+
+```bash
+npm run db:schema
+npm run db:seed
+```
 
 ## Recommended First Real Tables
 
