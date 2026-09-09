@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { games } from "../data/games";
+import { getGames } from "../api/client";
 
 const filterGroups = [
   {
@@ -33,6 +33,30 @@ const filterGroups = [
 ];
 
 export default function HomeBrowse() {
+  const [games, setGames] = useState([]);
+  const [status, setStatus] = useState("loading");
+
+  useEffect(() => {
+    let ignore = false;
+
+    getGames()
+      .then((data) => {
+        if (!ignore) {
+          setGames(data);
+          setStatus("ready");
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setStatus("error");
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   return (
     <div className="home-browse">
       <section className="hero-banner">
@@ -67,34 +91,38 @@ export default function HomeBrowse() {
 
         <section className="games-section">
           <h2>Trending Games</h2>
-          <div className="game-grid">
-            {games.map((game) => (
-              <Link
-                key={game.id}
-                to={`/games/${game.id}`}
-                className="game-card"
-                aria-label={`Browse ${game.title} sessions`}
-              >
-                <div
-                  className="game-cover"
-                  aria-label={`${game.title} artwork placeholder`}
-                />
-                <div className="game-meta">
-                  <h3>{game.title}</h3>
-                  <p>{game.active} active</p>
-                  <div className="game-card-footer">
-                    <span className="session-count">
-                      <span className="status-dot" aria-hidden="true" />
-                      {game.sessions} sessions
-                    </span>
-                    <span className="browse-button">
-                      Browse
-                    </span>
+          {status === "loading" && <p className="api-state">Loading games...</p>}
+          {status === "error" && (
+            <p className="api-state">Could not load games from the API.</p>
+          )}
+          {status === "ready" && (
+            <div className="game-grid">
+              {games.map((game) => (
+                <Link
+                  key={game.id}
+                  to={`/games/${game.id}`}
+                  className="game-card"
+                  aria-label={`Browse ${game.title} sessions`}
+                >
+                  <div
+                    className="game-cover"
+                    aria-label={`${game.title} artwork placeholder`}
+                  />
+                  <div className="game-meta">
+                    <h3>{game.title}</h3>
+                    <p>{game.active} active</p>
+                    <div className="game-card-footer">
+                      <span className="session-count">
+                        <span className="status-dot" aria-hidden="true" />
+                        {game.sessions} sessions
+                      </span>
+                      <span className="browse-button">Browse</span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>

@@ -1,12 +1,42 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getGameById } from "../data/games";
+import { getGame } from "../api/client";
 
 const tabs = ["All Types", "Achievements", "Co-op Campaigns"];
 
 export default function GameDetail() {
   const { id } = useParams();
-  const game = getGameById(id);
+  const [game, setGame] = useState(null);
+  const [status, setStatus] = useState("loading");
+
+  useEffect(() => {
+    let ignore = false;
+
+    getGame(id)
+      .then((data) => {
+        if (!ignore) {
+          setGame(data);
+          setStatus("ready");
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setStatus("error");
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
+  if (status === "loading") {
+    return <p className="api-state">Loading game...</p>;
+  }
+
+  if (status === "error" || !game) {
+    return <p className="api-state">Could not load this game.</p>;
+  }
 
   return (
     <div className="game-detail-page">

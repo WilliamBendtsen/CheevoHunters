@@ -1,34 +1,42 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
-const upcomingSessions = [
-  {
-    type: "Achievement Hunt",
-    tone: "achievement",
-    platform: "PC",
-    game: "Portal 2",
-    title: "Portal 2 co-op 'Professor Portal' achievement run",
-    starts: "Tomorrow, 8:00 PM EST",
-    to: "/session/portal-professor",
-  },
-  {
-    type: "Co-op Session",
-    tone: "coop",
-    platform: "Crossplay",
-    game: "Monster Hunter Wilds",
-    title: "Monster Hunter Wilds campaign co-op",
-    starts: "Saturday, 12:00 PM EST",
-    to: "/session/mhw-campaign",
-  },
-];
-
-const followingGames = [
-  { title: "Helldivers 2", to: "/games/1", enabled: true },
-  { title: "Lethal Company", to: "/games/2", enabled: false },
-  { title: "Monster Hunter Wilds", to: "/games/6", enabled: true },
-];
+import { getDashboard } from "../api/client";
 
 export default function UserDashboard() {
+  const [dashboard, setDashboard] = useState(null);
+  const [status, setStatus] = useState("loading");
+
+  useEffect(() => {
+    let ignore = false;
+
+    getDashboard()
+      .then((data) => {
+        if (!ignore) {
+          setDashboard(data);
+          setStatus("ready");
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setStatus("error");
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  if (status === "loading") {
+    return <p className="api-state">Loading dashboard...</p>;
+  }
+
+  if (status === "error" || !dashboard) {
+    return <p className="api-state">Could not load dashboard data.</p>;
+  }
+
+  const { followingGames, stats, upcomingSessions } = dashboard;
+
   return (
     <div className="dashboard-page">
       <section className="profile-summary">
@@ -39,13 +47,13 @@ export default function UserDashboard() {
           <h1>PixelPulse</h1>
           <div className="profile-stats">
             <span>
-              Sessions Joined: <strong>24</strong>
+              Sessions Joined: <strong>{stats.sessionsJoined}</strong>
             </span>
             <span>
-              Sessions Created: <strong>8</strong>
+              Sessions Created: <strong>{stats.sessionsCreated}</strong>
             </span>
             <span>
-              Games Followed: <strong>5</strong>
+              Games Followed: <strong>{stats.gamesFollowed}</strong>
             </span>
           </div>
         </div>

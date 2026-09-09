@@ -1,10 +1,40 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getSessionById } from "../data/games";
+import { getSession } from "../api/client";
 
 export default function SessionDetail() {
   const { id } = useParams();
-  const session = getSessionById(id);
+  const [session, setSession] = useState(null);
+  const [status, setStatus] = useState("loading");
+
+  useEffect(() => {
+    let ignore = false;
+
+    getSession(id)
+      .then((data) => {
+        if (!ignore) {
+          setSession(data);
+          setStatus("ready");
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setStatus("error");
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
+  if (status === "loading") {
+    return <p className="api-state">Loading session...</p>;
+  }
+
+  if (status === "error" || !session) {
+    return <p className="api-state">Could not load this session.</p>;
+  }
 
   return (
     <div className="session-detail-page">
