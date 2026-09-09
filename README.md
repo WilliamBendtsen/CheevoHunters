@@ -29,10 +29,9 @@ Backend structure:
 - `server/src/controllers`: HTTP request and response handlers.
 - `server/src/services`: application logic.
 - `server/src/repositories`: data access boundary.
-- `server/src/data`: temporary mock data until a database is added.
 - `server/src/middleware`: shared Express middleware.
 - `server/src/validators`: request payload validation.
-- `server/db`: Supabase/Postgres schema and seed files for the future database.
+- `server/db`: Supabase/Postgres schema and seed files.
 
 Useful API endpoints:
 
@@ -46,7 +45,7 @@ Useful API endpoints:
 
 Database status:
 
-- The backend currently uses `DATA_PROVIDER=mock`.
-- No Supabase secrets are required for the mock data.
-- The future Supabase/Postgres schema is in `server/db/schema.sql`.
+- The backend reads from Supabase/Postgres.
+- Supabase/Postgres environment values are required in `.env`.
+- The Supabase/Postgres schema is in `server/db/schema.sql`.
 - Demo seed data for Supabase/Postgres is in `server/db/seed.sql`.
