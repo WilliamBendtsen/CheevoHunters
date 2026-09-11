@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getGames } from "../api/client";
 
+const getCoverStyle = (coverUrl) =>
+  coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined;
+
 const filterGroups = [
   {
     title: "Platform",
@@ -105,8 +108,9 @@ export default function HomeBrowse() {
                   aria-label={`Browse ${game.title} sessions`}
                 >
                   <div
-                    className="game-cover"
-                    aria-label={`${game.title} artwork placeholder`}
+                    className={`game-cover ${game.coverUrl ? "has-cover" : ""}`}
+                    aria-label={`${game.title} cover artwork`}
+                    style={getCoverStyle(game.coverUrl)}
                   />
                   <div className="game-meta">
                     <h3>{game.title}</h3>

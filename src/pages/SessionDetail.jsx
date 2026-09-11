@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getSession } from "../api/client";
 
+const getCoverStyle = (coverUrl) =>
+  coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined;
+
 export default function SessionDetail() {
   const { id } = useParams();
   const [session, setSession] = useState(null);
@@ -40,8 +43,11 @@ export default function SessionDetail() {
     <div className="session-detail-page">
       <section className="session-banner">
         <div
-          className="session-game-cover"
-          aria-label={`${session.gameTitle} artwork placeholder`}
+          className={`session-game-cover ${
+            session.gameCoverUrl ? "has-cover" : ""
+          }`}
+          aria-label={`${session.gameTitle} cover artwork`}
+          style={getCoverStyle(session.gameCoverUrl)}
         />
         <div className="session-banner-copy">
           <div className="session-kicker">

@@ -14,6 +14,7 @@ export function serializeSession(session) {
     players: `${joinedMembers.length} / ${session.maxPlayers}`,
     gameId: session.game.legacyId ?? session.game.id,
     gameTitle: session.game.title,
+    gameCoverUrl: session.game.coverUrl ?? null,
     description: session.description,
     requirements: session.requirements,
     chat: session.chatMessages.map((message) => ({

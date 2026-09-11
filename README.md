@@ -50,6 +50,7 @@ Database status:
 - Supabase/Postgres environment values are required in `.env`.
 - The Supabase/Postgres schema is in `server/db/schema.sql`.
 - Demo seed data for Supabase/Postgres is in `server/db/seed.sql`.
+- Run `npm run igdb:sync-covers` to fill missing `igdb_id` and `cover_url` values from IGDB.
 
 IGDB/Twitch:
 

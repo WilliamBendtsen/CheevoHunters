@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getDashboard } from "../api/client";
 
+const getCoverStyle = (coverUrl) =>
+  coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined;
+
 export default function UserDashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [status, setStatus] = useState("loading");
@@ -98,7 +101,11 @@ export default function UserDashboard() {
           <div className="following-list">
             {followingGames.map((game) => (
               <Link className="following-row" key={game.title} to={game.to}>
-                <span className="following-cover" aria-hidden="true" />
+                <span
+                  className={`following-cover ${game.coverUrl ? "has-cover" : ""}`}
+                  aria-hidden="true"
+                  style={getCoverStyle(game.coverUrl)}
+                />
                 <span>{game.title}</span>
                 <span
                   className={`notification-status ${game.enabled ? "enabled" : ""}`}

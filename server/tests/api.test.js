@@ -59,6 +59,10 @@ describe("CheevoHunters API", () => {
     assert.equal(response.status, 200);
     assert.ok(body.data.stats.gamesFollowed > 0);
     assert.ok(body.data.followingGames.length > 0);
+    assert.match(
+      body.data.followingGames[0].coverUrl,
+      /^https:\/\/images\.igdb\.com/,
+    );
   });
 
   it("rejects short IGDB search queries before proxying", async () => {
@@ -80,6 +84,7 @@ describe("CheevoHunters API", () => {
     assert.equal(body.data.length, 1);
     assert.equal(body.data[0].title, "Helldivers 2");
     assert.equal(body.data[0].platforms, "PC, PS5");
+    assert.match(body.data[0].coverUrl, /^https:\/\/images\.igdb\.com/);
   });
 
   it("returns sessions filtered by game", async () => {
@@ -89,6 +94,7 @@ describe("CheevoHunters API", () => {
     assert.equal(response.status, 200);
     assert.ok(body.data.length > 0);
     assert.ok(body.data.every((session) => session.gameId === 1));
+    assert.match(body.data[0].gameCoverUrl, /^https:\/\/images\.igdb\.com/);
   });
 
   it("creates a session using the current Supabase-backed user", async () => {

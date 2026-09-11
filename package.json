@@ -11,7 +11,8 @@
     "start": "node server/index.js",
     "test:server": "node --test server/tests/*.test.js",
     "db:schema": "node server/scripts/run-sql-file.js server/db/schema.sql",
-    "db:seed": "node server/scripts/run-sql-file.js server/db/seed.sql"
+    "db:seed": "node server/scripts/run-sql-file.js server/db/seed.sql",
+    "igdb:sync-covers": "node server/scripts/sync-igdb-covers.js"
   },
   "dependencies": {
     "concurrently": "^8.2.0",

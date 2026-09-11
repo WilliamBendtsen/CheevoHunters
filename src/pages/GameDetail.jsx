@@ -4,6 +4,16 @@ import { getGame } from "../api/client";
 
 const tabs = ["All Types", "Achievements", "Co-op Campaigns"];
 
+const getCoverStyle = (coverUrl) =>
+  coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined;
+
+const getBackdropStyle = (coverUrl) =>
+  coverUrl
+    ? {
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.84)), url(${coverUrl})`,
+      }
+    : undefined;
+
 export default function GameDetail() {
   const { id } = useParams();
   const [game, setGame] = useState(null);
@@ -41,10 +51,15 @@ export default function GameDetail() {
   return (
     <div className="game-detail-page">
       <section className="game-hero">
-        <div className="game-hero-backdrop" aria-hidden="true" />
         <div
-          className="game-poster"
-          aria-label={`${game.title} cover artwork placeholder`}
+          className={`game-hero-backdrop ${game.coverUrl ? "has-cover" : ""}`}
+          aria-hidden="true"
+          style={getBackdropStyle(game.coverUrl)}
+        />
+        <div
+          className={`game-poster ${game.coverUrl ? "has-cover" : ""}`}
+          aria-label={`${game.title} cover artwork`}
+          style={getCoverStyle(game.coverUrl)}
         />
         <div className="game-hero-meta">
           <div className="game-title-row">

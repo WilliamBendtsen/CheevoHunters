@@ -381,6 +381,14 @@ main {
     var(--cover);
 }
 
+.game-cover.has-cover,
+.game-poster.has-cover,
+.following-cover.has-cover,
+.session-game-cover.has-cover {
+  background-position: center;
+  background-size: cover;
+}
+
 .game-meta {
   display: flex;
   flex: 1;
@@ -471,6 +479,12 @@ main {
     radial-gradient(circle at 77% 38%, rgba(245, 158, 11, 0.24), transparent 24%),
     radial-gradient(circle at 31% 26%, rgba(99, 102, 241, 0.22), transparent 28%),
     linear-gradient(90deg, #13161a, #1d1f24 48%, #0f1012);
+}
+
+.game-hero-backdrop.has-cover {
+  background-position: center;
+  background-size: cover;
+  filter: saturate(0.9);
 }
 
 .game-poster {

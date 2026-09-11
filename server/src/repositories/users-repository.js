@@ -72,6 +72,7 @@ async function findUpcomingSessions(userId) {
         s.session_type,
         s.time_label,
         g.title as game_title,
+        g.cover_url as game_cover_url,
         p.name as platform_name
       from session_members sm
       join sessions s on s.id = sm.session_id
@@ -91,6 +92,7 @@ async function findUpcomingSessions(userId) {
     tone: toSessionTone(row.session_type),
     platform: row.platform_name,
     game: row.game_title,
+    gameCoverUrl: row.game_cover_url,
     title: row.title,
     starts: row.time_label ?? "Flexible Time",
     to: `/session/${toApiSessionId(row.id)}`,
@@ -103,7 +105,8 @@ async function findFollowingGames(userId) {
       select
         gf.notifications_enabled,
         g.id,
-        g.title
+        g.title,
+        g.cover_url
       from game_follows gf
       join games g on g.id = gf.game_id
       where gf.user_id = $1
@@ -116,6 +119,7 @@ async function findFollowingGames(userId) {
     title: row.title,
     to: `/games/${toApiGameId(row.id)}`,
     enabled: row.notifications_enabled,
+    coverUrl: row.cover_url,
   }));
 }
 

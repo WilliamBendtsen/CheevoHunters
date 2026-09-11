@@ -17,16 +17,20 @@ insert into games (
   igdb_id,
   title,
   slug,
+  cover_url,
   active_players_label,
   follower_count
 ) values
-  ('20000000-0000-4000-8000-000000000001', null, 'Helldivers 2', 'helldivers-2', '142k', 12400),
-  ('20000000-0000-4000-8000-000000000002', null, 'Lethal Company', 'lethal-company', '45k', 8800),
-  ('20000000-0000-4000-8000-000000000003', null, 'Elden Ring', 'elden-ring', '89k', 18900),
-  ('20000000-0000-4000-8000-000000000004', null, 'Deep Rock Galactic', 'deep-rock-galactic', '22k', 6200),
-  ('20000000-0000-4000-8000-000000000005', null, 'Portal 2', 'portal-2', '8k', 3700),
-  ('20000000-0000-4000-8000-000000000006', null, 'Monster Hunter Wilds', 'monster-hunter-wilds', '165k', 21600)
-on conflict (slug) do nothing;
+  ('20000000-0000-4000-8000-000000000001', 250616, 'Helldivers 2', 'helldivers-2', 'https://images.igdb.com/igdb/image/upload/t_cover_big/coabbf.jpg', '142k', 12400),
+  ('20000000-0000-4000-8000-000000000002', 212089, 'Lethal Company', 'lethal-company', 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5ive.jpg', '45k', 8800),
+  ('20000000-0000-4000-8000-000000000003', 119133, 'Elden Ring', 'elden-ring', 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', '89k', 18900),
+  ('20000000-0000-4000-8000-000000000004', 27134, 'Deep Rock Galactic', 'deep-rock-galactic', 'https://images.igdb.com/igdb/image/upload/t_cover_big/coaat4.jpg', '22k', 6200),
+  ('20000000-0000-4000-8000-000000000005', 72, 'Portal 2', 'portal-2', 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg', '8k', 3700),
+  ('20000000-0000-4000-8000-000000000006', 279661, 'Monster Hunter Wilds', 'monster-hunter-wilds', 'https://images.igdb.com/igdb/image/upload/t_cover_big/co904o.jpg', '165k', 21600)
+on conflict (slug) do update set
+  igdb_id = excluded.igdb_id,
+  cover_url = excluded.cover_url,
+  updated_at = now();
 
 insert into game_platforms (game_id, platform_id) values
   ('20000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001'),

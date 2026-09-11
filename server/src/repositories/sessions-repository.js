@@ -17,6 +17,7 @@ export const sessionsRepository = {
         s.*,
         g.id as game_id,
         g.title as game_title,
+        g.cover_url as game_cover_url,
         p.id as platform_id,
         p.name as platform_name,
         p.slug as platform_slug,
@@ -41,6 +42,7 @@ export const sessionsRepository = {
           s.*,
           g.id as game_id,
           g.title as game_title,
+          g.cover_url as game_cover_url,
           p.id as platform_id,
           p.name as platform_name,
           p.slug as platform_slug,
@@ -170,6 +172,7 @@ async function hydrateSessions(sessionRows) {
         id: row.game_id,
         legacyId: toApiGameId(row.game_id),
         title: row.game_title,
+        coverUrl: row.game_cover_url,
       },
       platform: {
         id: row.platform_id,
