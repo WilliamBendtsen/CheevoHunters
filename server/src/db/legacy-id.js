@@ -47,7 +47,7 @@ function createDeterministicUuid(value) {
 }
 
 const legacyGameIdsByUuid = new Map(
-  Array.from({ length: 6 }, (_, index) => {
+  Array.from({ length: 8 }, (_, index) => {
     const legacyId = String(index + 1);
     return [resolveGameId(legacyId), Number(legacyId)];
   }),
