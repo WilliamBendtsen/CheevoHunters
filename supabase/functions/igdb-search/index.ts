@@ -148,7 +148,7 @@ async function getTwitchAccessToken() {
 }
 
 function getRequiredEnv(name: string) {
-  const value = Deno.env.get(name);
+  const value = Deno.env.get(name)?.trim();
 
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);

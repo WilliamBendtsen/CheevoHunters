@@ -61,6 +61,17 @@ describe("CheevoHunters API", () => {
     assert.ok(body.data.followingGames.length > 0);
   });
 
+  it("rejects short IGDB search queries before proxying", async () => {
+    const response = await fetch(`${baseUrl}/api/igdb/search?q=p`);
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.equal(
+      body.error.message,
+      "Search query must be at least 2 characters.",
+    );
+  });
+
   it("lists games with serialized platform data", async () => {
     const response = await fetch(`${baseUrl}/api/games?search=helldivers`);
     const body = await response.json();

@@ -27,6 +27,10 @@ export async function getDashboard() {
   return apiRequest("/users/me/dashboard");
 }
 
+export async function searchIgdbGames(query) {
+  return apiRequest(`/igdb/search${toQueryString({ q: query })}`);
+}
+
 async function apiRequest(path, options) {
   const response = await fetch(`${API_BASE_URL}${path}`, options);
   const body = await response.json();

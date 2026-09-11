@@ -42,6 +42,7 @@ Useful API endpoints:
 - `GET /api/sessions/:sessionId`
 - `POST /api/sessions`
 - `GET /api/users/me`
+- `GET /api/igdb/search?q=portal`
 
 Database status:
 
@@ -53,5 +54,6 @@ Database status:
 IGDB/Twitch:
 
 - `supabase/functions/igdb-search` is an Edge Function that calls IGDB through Twitch client credentials.
+- The frontend should call `GET /api/igdb/search?q=...`; the Express backend proxies that request to the Edge Function.
 - Set `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`, and `IGDB_API_BASE_URL` as Supabase Edge Function secrets before deploying.
 - The local `.env` values are only for local backend/scripts; deployed Edge Functions need their own Supabase secrets.
