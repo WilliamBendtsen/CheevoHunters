@@ -1,43 +1,86 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createSession, getGames } from "../api/client";
+import { createSession, indexIgdbGame, searchIgdbGames } from "../api/client";
+
+const getCoverStyle = (coverUrl) =>
+  coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined;
 
 export default function CreateSession() {
   const navigate = useNavigate();
-  const [games, setGames] = useState([]);
-  const [status, setStatus] = useState("loading");
+  const gameInputRef = useRef(null);
   const [submitStatus, setSubmitStatus] = useState("idle");
+  const [gameQuery, setGameQuery] = useState("");
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [igdbGames, setIgdbGames] = useState([]);
+  const [searchStatus, setSearchStatus] = useState("idle");
+  const [gamePickerOpen, setGamePickerOpen] = useState(false);
+  const [highlightedGameId, setHighlightedGameId] = useState(null);
+  const [gameError, setGameError] = useState("");
+
+  const gameResults = useMemo(() => normalizeIgdbResults(igdbGames), [igdbGames]);
 
   useEffect(() => {
-    let ignore = false;
+    const query = gameQuery.trim();
 
-    getGames()
-      .then((data) => {
-        if (!ignore) {
-          setGames(data);
-          setStatus("ready");
-        }
-      })
-      .catch(() => {
-        if (!ignore) {
-          setStatus("error");
-        }
-      });
+    if (
+      query.length < 2 ||
+      (selectedGame && selectedGame.title.toLowerCase() === query.toLowerCase())
+    ) {
+      setIgdbGames([]);
+      setSearchStatus("idle");
+      return undefined;
+    }
+
+    let ignore = false;
+    setSearchStatus("searching");
+
+    const timeoutId = window.setTimeout(() => {
+      searchIgdbGames(query)
+        .then((results) => {
+          if (!ignore) {
+            setIgdbGames(results);
+            setSearchStatus("ready");
+          }
+        })
+        .catch(() => {
+          if (!ignore) {
+            setIgdbGames([]);
+            setSearchStatus("error");
+          }
+        });
+    }, 300);
 
     return () => {
       ignore = true;
+      window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [gameQuery, selectedGame]);
+
+  useEffect(() => {
+    if (gamePickerOpen) {
+      setHighlightedGameId(gameResults[0]?.id ?? null);
+    }
+  }, [gamePickerOpen, gameResults]);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setSubmitStatus("submitting");
+    setGameError("");
 
     const formData = new FormData(event.currentTarget);
 
     try {
+      const gameId = await resolveSelectedGameId();
+
+      if (!gameId) {
+        setGameError("Choose a game from the list before publishing.");
+        setSubmitStatus("idle");
+        gameInputRef.current?.focus();
+        return;
+      }
+
       const session = await createSession({
-        gameId: formData.get("gameId"),
+        gameId,
         title: formData.get("title"),
         platform: formData.get("platform"),
         sessionType: formData.get("sessionType"),
@@ -52,12 +95,73 @@ export default function CreateSession() {
     }
   }
 
-  if (status === "loading") {
-    return <p className="api-state">Loading games...</p>;
+  async function resolveSelectedGameId() {
+    if (!selectedGame) {
+      return "";
+    }
+
+    if (selectedGame.source !== "igdb") {
+      return selectedGame.id;
+    }
+
+    const indexedGame = await indexIgdbGame({
+      igdbId: selectedGame.igdbId,
+      title: selectedGame.title,
+      slug: selectedGame.slug,
+      coverUrl: selectedGame.coverUrl,
+      platforms: selectedGame.platforms,
+    });
+
+    setSelectedGame(indexedGame);
+    return indexedGame.id;
   }
 
-  if (status === "error") {
-    return <p className="api-state">Could not load games for the form.</p>;
+  function handleGameQueryChange(event) {
+    setGameQuery(event.target.value);
+    setSelectedGame(null);
+    setGameError("");
+    setGamePickerOpen(true);
+  }
+
+  function handleGameInputKeyDown(event) {
+    const currentIndex = gameResults.findIndex((game) => game.id === highlightedGameId);
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setGamePickerOpen(true);
+      setHighlightedGameId(
+        gameResults[Math.min(currentIndex + 1, gameResults.length - 1)]?.id ??
+          gameResults[0]?.id ??
+          null,
+      );
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedGameId(
+        gameResults[Math.max(currentIndex - 1, 0)]?.id ?? gameResults[0]?.id ?? null,
+      );
+    }
+
+    if (event.key === "Enter" && gamePickerOpen && highlightedGameId) {
+      event.preventDefault();
+      const game = gameResults.find((result) => result.id === highlightedGameId);
+
+      if (game) {
+        selectGame(game);
+      }
+    }
+
+    if (event.key === "Escape") {
+      setGamePickerOpen(false);
+    }
+  }
+
+  function selectGame(game) {
+    setSelectedGame(game);
+    setGameQuery(game.title);
+    setGameError("");
+    setGamePickerOpen(false);
   }
 
   return (
@@ -70,21 +174,96 @@ export default function CreateSession() {
 
         <div className="form-divider" />
 
-        <label className="field field-full">
-          <span>Select Game</span>
-          <span className="select-shell game-select-shell">
+        <div className="field field-full game-picker-field">
+          <span id="game-picker-label">Select Game</span>
+          <input name="gameId" type="hidden" value={selectedGame?.id ?? ""} />
+          <div
+            className={`game-combobox ${gamePickerOpen ? "is-open" : ""}`}
+            role="combobox"
+            aria-controls="game-picker-results"
+            aria-expanded={gamePickerOpen}
+            aria-haspopup="listbox"
+            aria-labelledby="game-picker-label"
+          >
             <span className="field-icon" aria-hidden="true">
               CH
             </span>
-            <select defaultValue={games[0]?.id} name="gameId">
-              {games.map((game) => (
-                <option key={game.id} value={game.id}>
-                  {game.title}
-                </option>
+            <input
+              ref={gameInputRef}
+              aria-activedescendant={
+                highlightedGameId ? `game-option-${highlightedGameId}` : undefined
+              }
+              aria-autocomplete="list"
+              autoComplete="off"
+              onBlur={() => window.setTimeout(() => setGamePickerOpen(false), 120)}
+              onChange={handleGameQueryChange}
+              onFocus={() => setGamePickerOpen(true)}
+              onKeyDown={handleGameInputKeyDown}
+              placeholder="Search games..."
+              type="search"
+              value={gameQuery}
+            />
+            <button
+              aria-label={gamePickerOpen ? "Close game list" : "Open game list"}
+              className="game-picker-toggle"
+              onClick={() => setGamePickerOpen((isOpen) => !isOpen)}
+              type="button"
+            />
+          </div>
+          {gamePickerOpen && (
+            <div className="game-picker-results" id="game-picker-results" role="listbox">
+              {gameResults.map((game) => (
+                <button
+                  aria-selected={selectedGame?.id === game.id}
+                  className={`game-picker-option ${
+                    highlightedGameId === game.id ? "is-highlighted" : ""
+                  }`}
+                  id={`game-option-${game.id}`}
+                  key={`${game.source}-${game.id}`}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setHighlightedGameId(game.id)}
+                  onClick={() => selectGame(game)}
+                  role="option"
+                  type="button"
+                >
+                  <span
+                    className={`game-picker-cover ${game.coverUrl ? "has-cover" : ""}`}
+                    style={getCoverStyle(game.coverUrl)}
+                    aria-hidden="true"
+                  />
+                  <span className="game-picker-copy">
+                    <strong>{game.title}</strong>
+                    <span>{game.platformsLabel || "IGDB result"}</span>
+                  </span>
+                </button>
               ))}
-            </select>
-          </span>
-        </label>
+              {searchStatus === "searching" && (
+                <p className="game-picker-status">Searching IGDB...</p>
+              )}
+              {searchStatus === "error" && (
+                <p className="game-picker-status">Could not search IGDB.</p>
+              )}
+              {gameQuery.trim().length > 0 && gameQuery.trim().length < 2 && (
+                <p className="game-picker-status">Type at least 2 characters.</p>
+              )}
+              {gameResults.length === 0 &&
+                searchStatus !== "searching" &&
+                gameQuery.trim().length !== 1 && (
+                  <p className="game-picker-status">
+                    {gameQuery.trim().length >= 2
+                      ? "No matching games found."
+                      : "Start typing to search games."}
+                  </p>
+                )}
+            </div>
+          )}
+          {selectedGame?.source === "igdb" && (
+            <p className="game-picker-note">
+              This game will be prepared for your session when you publish.
+            </p>
+          )}
+          {gameError && <p className="field-error">{gameError}</p>}
+        </div>
 
         <div className="form-row">
           <label className="field">
@@ -172,4 +351,13 @@ export default function CreateSession() {
       </form>
     </div>
   );
+}
+
+function normalizeIgdbResults(games) {
+  return games.map((game) => ({
+    ...game,
+    id: `igdb-${game.igdbId}`,
+    source: "igdb",
+    platformsLabel: Array.isArray(game.platforms) ? game.platforms.join(", ") : "",
+  }));
 }

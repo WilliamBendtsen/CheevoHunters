@@ -9,6 +9,16 @@ export async function getGame(gameId) {
   return apiRequest(`/games/${gameId}`);
 }
 
+export async function indexIgdbGame(game) {
+  return apiRequest("/games/index", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(game),
+  });
+}
+
 export async function getSession(sessionId) {
   return apiRequest(`/sessions/${sessionId}`);
 }

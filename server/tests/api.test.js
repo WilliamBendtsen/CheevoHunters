@@ -31,6 +31,7 @@ after(async () => {
   });
 
   await db.query("delete from sessions where title like 'Backend API test session%'");
+  await db.query("delete from games where title like 'Backend API indexed game%'");
   await closeDb();
 });
 
@@ -85,6 +86,29 @@ describe("CheevoHunters API", () => {
     assert.equal(body.data[0].title, "Helldivers 2");
     assert.equal(body.data[0].platforms, "PC, PS5");
     assert.match(body.data[0].coverUrl, /^https:\/\/images\.igdb\.com/);
+  });
+
+  it("indexes a selected IGDB game into the catalog", async () => {
+    const igdbId = 900000 + Math.floor(Math.random() * 100000);
+    const response = await fetch(`${baseUrl}/api/games/index`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        igdbId,
+        title: `Backend API indexed game ${igdbId}`,
+        slug: `backend-api-indexed-game-${igdbId}`,
+        coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1234.jpg",
+        platforms: ["PC (Microsoft Windows)", "PlayStation 5"],
+      }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 201);
+    assert.equal(body.data.igdbId, igdbId);
+    assert.equal(body.data.platforms, "PC, PS5");
+    assert.match(body.data.coverUrl, /^https:\/\/images\.igdb\.com/);
   });
 
   it("returns sessions filtered by game", async () => {

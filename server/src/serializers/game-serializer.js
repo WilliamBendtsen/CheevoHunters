@@ -3,6 +3,7 @@ import { serializeSession } from "./session-serializer.js";
 export function serializeGame(game) {
   return {
     id: game.legacyId ?? game.id,
+    igdbId: game.igdbId,
     title: game.title,
     slug: game.slug,
     active: game.activePlayersLabel,

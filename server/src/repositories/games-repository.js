@@ -46,6 +46,49 @@ export const gamesRepository = {
   async findRecordById(gameId) {
     return findGameRecord(gameId);
   },
+
+  async indexIgdbGame(game) {
+    const client = await db.connect();
+
+    try {
+      await client.query("begin");
+
+      const slug = await createUniqueSlug(
+        client,
+        toSlug(game.slug ?? game.title),
+        game.igdbId,
+      );
+      const { rows } = await client.query(
+        `
+          insert into games (
+            igdb_id,
+            title,
+            slug,
+            cover_url,
+            active_players_label,
+            follower_count
+          )
+          values ($1, $2, $3, $4, null, 0)
+          on conflict (igdb_id) do update set
+            title = excluded.title,
+            cover_url = coalesce(excluded.cover_url, games.cover_url),
+            updated_at = now()
+          returning id
+        `,
+        [game.igdbId, game.title, slug, game.coverUrl ?? null],
+      );
+
+      await linkKnownPlatforms(client, rows[0].id, game.platforms ?? []);
+      await client.query("commit");
+
+      return gamesRepository.findById(rows[0].id);
+    } catch (error) {
+      await client.query("rollback").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+  },
 };
 
 async function findGameRecord(gameId) {
@@ -124,6 +167,7 @@ async function findSessionsByGameIds(gameIds) {
 function toGameModel(row, detailSessions) {
   return {
     id: row.id,
+    igdbId: row.igdb_id,
     legacyId: toApiGameId(row.id),
     title: row.title,
     slug: row.slug,
@@ -134,6 +178,79 @@ function toGameModel(row, detailSessions) {
     platforms: row.platforms,
     detailSessions,
   };
+}
+
+async function createUniqueSlug(client, preferredSlug, igdbId) {
+  const baseSlug = preferredSlug || `igdb-${igdbId}`;
+  let candidate = baseSlug;
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const { rows } = await client.query(
+      "select igdb_id from games where slug = $1 limit 1",
+      [candidate],
+    );
+
+    if (!rows[0] || rows[0].igdb_id === igdbId) {
+      return candidate;
+    }
+
+    candidate = `${baseSlug}-${igdbId}${attempt ? `-${attempt}` : ""}`;
+  }
+
+  return `${baseSlug}-${igdbId}-${Date.now()}`;
+}
+
+async function linkKnownPlatforms(client, gameId, platformNames) {
+  const platformSlugs = Array.from(
+    new Set(platformNames.map(toKnownPlatformSlug).filter(Boolean)),
+  );
+
+  if (platformSlugs.length === 0) {
+    return;
+  }
+
+  const { rows } = await client.query(
+    "select id from platforms where slug = any($1::text[])",
+    [platformSlugs],
+  );
+
+  for (const row of rows) {
+    await client.query(
+      `
+        insert into game_platforms (game_id, platform_id)
+        values ($1, $2)
+        on conflict do nothing
+      `,
+      [gameId, row.id],
+    );
+  }
+}
+
+function toKnownPlatformSlug(name) {
+  const value = String(name).toLowerCase();
+
+  if (value.includes("windows") || value === "pc" || value.includes("linux")) {
+    return "pc";
+  }
+
+  if (value.includes("playstation 5") || value === "ps5") {
+    return "ps5";
+  }
+
+  if (value.includes("xbox series")) {
+    return "xbox-series";
+  }
+
+  return undefined;
+}
+
+function toSlug(value) {
+  return String(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 function toSessionSummary(row) {

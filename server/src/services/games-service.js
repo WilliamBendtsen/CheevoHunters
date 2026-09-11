@@ -29,4 +29,29 @@ export const gamesService = {
 
     return game;
   },
+
+  async indexIgdbGame(payload = {}) {
+    const igdbId = Number(payload.igdbId);
+    const title = typeof payload.title === "string" ? payload.title.trim() : "";
+
+    if (!Number.isInteger(igdbId) || igdbId <= 0) {
+      throw createHttpError(400, "IGDB game payload is invalid.", {
+        igdbId: "Provide a valid IGDB id.",
+      });
+    }
+
+    if (!title) {
+      throw createHttpError(400, "IGDB game payload is invalid.", {
+        title: "Provide a game title.",
+      });
+    }
+
+    return gamesRepository.indexIgdbGame({
+      igdbId,
+      title,
+      slug: typeof payload.slug === "string" ? payload.slug.trim() : "",
+      coverUrl: typeof payload.coverUrl === "string" ? payload.coverUrl : null,
+      platforms: Array.isArray(payload.platforms) ? payload.platforms : [],
+    });
+  },
 };

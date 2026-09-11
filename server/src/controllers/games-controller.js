@@ -12,4 +12,10 @@ export const gamesController = {
       data: await gamesService.getGame(req.params.gameId),
     });
   },
+
+  async indexIgdbGame(req, res) {
+    res.status(201).json({
+      data: await gamesService.indexIgdbGame(req.body),
+    });
+  },
 };
