@@ -386,6 +386,7 @@ main {
 .game-cover.has-cover,
 .game-poster.has-cover,
 .following-cover.has-cover,
+.dashboard-session-cover.has-cover,
 .session-game-cover.has-cover {
   background-position: center;
   background-repeat: no-repeat;
@@ -1246,7 +1247,6 @@ main {
 .dashboard-session-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   min-height: 111px;
   padding: 20px;
@@ -1255,8 +1255,21 @@ main {
   background: var(--panel);
 }
 
+.dashboard-session-cover {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 72px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.18), transparent 28%),
+    linear-gradient(145deg, rgba(99, 102, 241, 0.26), rgba(16, 185, 129, 0.16)),
+    var(--cover);
+}
+
 .dashboard-session-copy {
   display: grid;
+  flex: 1;
   min-width: 0;
   gap: 6px;
 }
@@ -1909,11 +1922,13 @@ main {
   }
 
   .dashboard-session-card {
-    align-items: stretch;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    align-items: center;
   }
 
   .detail-button {
+    grid-column: 1 / -1;
     width: 100%;
   }
 

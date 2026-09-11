@@ -77,6 +77,13 @@ export default function UserDashboard() {
           <div className="upcoming-list">
             {upcomingSessions.map((session) => (
               <article className="dashboard-session-card" key={session.title}>
+                <span
+                  className={`dashboard-session-cover ${
+                    session.gameCoverUrl ? "has-cover" : ""
+                  }`}
+                  aria-label={`${session.game} cover artwork`}
+                  style={getCoverStyle(session.gameCoverUrl)}
+                />
                 <div className="dashboard-session-copy">
                   <div className="session-kicker">
                     <span className={`session-tag ${session.tone}`}>
