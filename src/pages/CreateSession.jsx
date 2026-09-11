@@ -5,6 +5,27 @@ import { createSession, indexIgdbGame, searchIgdbGames } from "../api/client";
 const getCoverStyle = (coverUrl) =>
   coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined;
 
+const PLATFORM_PREVIEW_LIMIT = 3;
+
+const platformDisplayRules = [
+  { label: "PC", rank: 1, match: /windows|microsoft windows|\bpc\b/i },
+  { label: "PS5", rank: 2, match: /playstation 5|\bps5\b/i },
+  { label: "Xbox Series X/S", rank: 3, match: /xbox series/i },
+  { label: "Nintendo Switch", rank: 4, match: /switch/i },
+  { label: "PS4", rank: 5, match: /playstation 4|\bps4\b/i },
+  { label: "Xbox One", rank: 6, match: /xbox one/i },
+  { label: "Mac", rank: 7, match: /mac/i },
+  { label: "Linux", rank: 8, match: /linux/i },
+  { label: "iOS", rank: 9, match: /\bios\b|iphone|ipad/i },
+  { label: "Android", rank: 10, match: /android/i },
+  { label: "PS3", rank: 20, match: /playstation 3|\bps3\b/i },
+  { label: "Xbox 360", rank: 21, match: /xbox 360/i },
+  { label: "Wii U", rank: 30, match: /wii u/i },
+  { label: "Nintendo 3DS", rank: 31, match: /3ds/i },
+  { label: "Stadia", hidden: true, rank: 90, match: /stadia/i },
+  { label: "Amazon Luna", hidden: true, rank: 91, match: /luna/i },
+];
+
 export default function CreateSession() {
   const navigate = useNavigate();
   const gameInputRef = useRef(null);
@@ -269,8 +290,8 @@ export default function CreateSession() {
           <label className="field">
             <span>Session Title</span>
             <input
-              defaultValue="Achievement Hunt: All Guns Blazing (Need 2)"
               name="title"
+              placeholder="Summarize the session goal and party size"
               type="text"
             />
           </label>
@@ -319,16 +340,16 @@ export default function CreateSession() {
         <label className="field field-full">
           <span>Description & Goals</span>
           <textarea
-            defaultValue={'Looking for experienced players to tackle the "All Guns Blazing" achievement in the new DLC zone. Need to bring heavy weapon loadouts.'}
             name="description"
+            placeholder="Describe what you want to complete, how long it may take, and what kind of players should join"
           />
         </label>
 
         <label className="field field-full">
           <span>Specific Requirements</span>
           <input
-            defaultValue="Must have Discord & voice enabled. DLC installed."
             name="requirements"
+            placeholder="Add voice chat, DLC, level, build, region, or experience requirements"
             type="text"
           />
         </label>
@@ -358,6 +379,61 @@ function normalizeIgdbResults(games) {
     ...game,
     id: `igdb-${game.igdbId}`,
     source: "igdb",
-    platformsLabel: Array.isArray(game.platforms) ? game.platforms.join(", ") : "",
+    platformsLabel: formatPlatformPreview(game.platforms),
   }));
+}
+
+function formatPlatformPreview(platforms) {
+  if (!Array.isArray(platforms) || platforms.length === 0) {
+    return "";
+  }
+
+  const sortedPlatforms = sortPlatformsByRelevance(platforms);
+  const previewPool = sortedPlatforms.filter((platform) => !platform.hidden);
+
+  if (previewPool.length === 0) {
+    return "";
+  }
+
+  const visiblePlatforms = previewPool.slice(0, PLATFORM_PREVIEW_LIMIT);
+  const hiddenCount = previewPool.length - visiblePlatforms.length;
+  const label = visiblePlatforms.map((platform) => platform.label).join(", ");
+
+  return hiddenCount > 0 ? `${label} +${hiddenCount} more` : label;
+}
+
+function sortPlatformsByRelevance(platforms) {
+  const platformsByLabel = new Map();
+
+  for (const platform of platforms) {
+    const normalizedPlatform = normalizePlatform(platform);
+    const existingPlatform = platformsByLabel.get(normalizedPlatform.label);
+
+    if (!existingPlatform || normalizedPlatform.rank < existingPlatform.rank) {
+      platformsByLabel.set(normalizedPlatform.label, normalizedPlatform);
+    }
+  }
+
+  return Array.from(platformsByLabel.values()).sort(
+    (a, b) => a.rank - b.rank || a.label.localeCompare(b.label),
+  );
+}
+
+function normalizePlatform(platform) {
+  const name = String(platform);
+  const rule = platformDisplayRules.find((item) => item.match.test(name));
+
+  if (rule) {
+    return {
+      label: rule.label,
+      rank: rule.rank,
+      hidden: Boolean(rule.hidden),
+    };
+  }
+
+  return {
+    label: name,
+    rank: 50,
+    hidden: false,
+  };
 }
