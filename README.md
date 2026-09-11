@@ -49,3 +49,9 @@ Database status:
 - Supabase/Postgres environment values are required in `.env`.
 - The Supabase/Postgres schema is in `server/db/schema.sql`.
 - Demo seed data for Supabase/Postgres is in `server/db/seed.sql`.
+
+IGDB/Twitch:
+
+- `supabase/functions/igdb-search` is an Edge Function that calls IGDB through Twitch client credentials.
+- Set `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`, and `IGDB_API_BASE_URL` as Supabase Edge Function secrets before deploying.
+- The local `.env` values are only for local backend/scripts; deployed Edge Functions need their own Supabase secrets.

@@ -1,0 +1,4 @@
+project_id = "mldjxifcpcqcimrritvl"
+
+[functions.igdb-search]
+verify_jwt = false
