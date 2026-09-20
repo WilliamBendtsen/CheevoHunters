@@ -1,3 +1,4 @@
+import ProfilePictureUpload from "../components/ProfilePictureUpload";
 import { useAuth } from "../auth/AuthContext";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -45,9 +46,7 @@ export default function UserDashboard() {
   return (
     <div className="dashboard-page">
       <section className="profile-summary">
-        <div className="profile-avatar" aria-label={`${user.username} avatar`}>
-          {user.username.slice(0, 2).toUpperCase()}
-        </div>
+        <ProfilePictureUpload />
         <div className="profile-meta">
           <h1>{user.displayName}</h1>
           <div className="profile-stats">
@@ -62,9 +61,6 @@ export default function UserDashboard() {
             </span>
           </div>
         </div>
-        <button className="secondary-action edit-profile-button" type="button">
-          Edit Profile
-        </button>
       </section>
 
       <section className="dashboard-content">

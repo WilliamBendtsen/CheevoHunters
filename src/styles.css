@@ -1971,3 +1971,23 @@ main {
 .auth-switch a { color: #b8adff; }
 .auth-card :disabled { opacity: .65; cursor: wait; }
 @media (max-width: 600px) { .auth-page { padding: 24px 12px; } .auth-card { padding: 24px; } }
+
+.user-avatar { overflow: hidden; flex-shrink: 0; }
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* The avatar itself is the profile-picture upload control. */
+.profile-picture-upload { position: relative; flex: 0 0 auto; width: 80px; }
+.profile-picture-button { position: relative; display: block; width: 80px; height: 80px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.profile-picture-button:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
+.profile-picture-overlay { position: absolute; inset: 3px; display: grid; place-items: center; border-radius: 50%; background: rgba(0, 0, 0, .6); color: #fff; opacity: 0; transition: opacity 150ms ease; pointer-events: none; }
+.profile-picture-button:hover .profile-picture-overlay,
+.profile-picture-button:focus-visible .profile-picture-overlay,
+.profile-picture-button:disabled .profile-picture-overlay { opacity: 1; }
+.profile-picture-button:disabled { cursor: wait; }
+.profile-picture-hint { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.profile-picture-feedback, .profile-picture-error { display: block; width: 180px; margin-top: 8px; color: var(--muted-text); font-size: 12px; line-height: 1.4; }
+.profile-picture-feedback:empty { display: none; }
+.profile-picture-error { color: #ffabab; }
+.profile-picture-spinner { animation: profile-picture-spin 1s linear infinite; }
+@keyframes profile-picture-spin { to { transform: rotate(360deg); } }
+@media (hover: none) { .profile-picture-overlay { opacity: 1; background: rgba(0, 0, 0, .35); } }
+@media (prefers-reduced-motion: reduce) { .profile-picture-overlay { transition: none; } .profile-picture-spinner { animation: none; } }

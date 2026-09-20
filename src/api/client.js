@@ -71,3 +71,7 @@ const authRequest = (action, payload = {}) => apiRequest(`/auth/${action}`, {
 export const signUp = (payload) => authRequest("signup", payload);
 export const signIn = (payload) => authRequest("login", payload);
 export const signOut = () => authRequest("logout");
+
+export const uploadAvatar = (file) => apiRequest("/users/me/avatar", {
+  method: "PUT", headers: { "Content-Type": file.type }, body: file,
+});

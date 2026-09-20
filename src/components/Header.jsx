@@ -1,3 +1,4 @@
+import UserAvatar from "./UserAvatar";
 import { useAuth } from "../auth/AuthContext";
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -38,7 +39,7 @@ export default function Header() {
         </button>
         {user ? <>
           <NavLink to="/dashboard" className="profile-link" aria-label="Open profile">
-            <span className="avatar">{user.username.slice(0, 2).toUpperCase()}</span>
+            <UserAvatar user={user} />
             <span>{user.displayName}</span>
           </NavLink>
           <button className="secondary-action" type="button" disabled={busy} onClick={handleLogout}>{busy ? "Logging out..." : "Log out"}</button>

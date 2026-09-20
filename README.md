@@ -80,7 +80,8 @@ Twitch remains the IGDB application integration only.
 For deployment, set `NODE_ENV=production`, use HTTPS, and set `CLIENT_ORIGIN` to
 exactly the frontend origin (no trailing slash). Frontend and API must be on the
 same site (e.g. `app.example.com` and `api.example.com`) for SameSite cookies.
-All mutation requests must include this Origin and `Content-Type: application/json`.
+All mutation requests must include this Origin and `Content-Type: application/json`,
+except profile picture uploads, which send the image bytes with an image content type.
 The API sets credentialed CORS and private account responses are not cached.
 The database role used by Express must have access to `users` and `auth_sessions`;
 these tables deny direct access by Supabase `anon` and `authenticated` roles.
@@ -110,3 +111,24 @@ then run `npm run dev`. Existing databases do not need to be seeded again.
 Both development commands watch `.env` and restart the backend when it changes.
 If development was already running before these script changes, stop and restart
 it once to activate the new watcher. Refresh the browser after configuration loads.
+
+## Profile pictures
+
+On the dashboard, hover over or focus your profile-picture circle to reveal the
+camera icon. Click the circle and choose a local JPG, PNG, or WebP
+file up to 5 MB. The image uploads immediately and appears on the dashboard and
+in the header. There is no image-URL input.
+
+Run `npm run storage:setup` once per Supabase project. This creates/configures the
+public `profile-avatars` bucket (WebP only, 5 MB limit). It requires `SUPABASE_URL`
+and `SUPABASE_SERVICE_ROLE_KEY` in the backend `.env`; the key is never sent to the
+browser. The existing `users.avatar_url` column stores each saved image URL, so no
+new database columns are required.
+
+`PUT /api/users/me/avatar` requires the user's login cookie and trusted Origin.
+The backend validates image bytes, limits decoded images to 25 megapixels, crops
+and resizes them to 512×512 WebP, and strips metadata. Object paths are generated
+from the authenticated user ID and a random ID. Clients cannot choose another
+user's destination or write directly to Storage. Images are publicly readable;
+write access stays on the backend. Replacements remove the previous owned image;
+a failed database update removes the new upload and preserves the saved picture.
