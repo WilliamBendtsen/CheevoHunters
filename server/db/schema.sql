@@ -136,3 +136,20 @@ create index if not exists chat_messages_session_id_created_at_idx on chat_messa
 alter table games add column if not exists session_count integer not null default 0;
 alter table sessions add column if not exists time_label text;
 alter table chat_messages add column if not exists time_label text;
+
+-- Password-based accounts. Seed users intentionally have no login credentials.
+alter table users add column if not exists password_hash text;
+create unique index if not exists users_username_lower_idx on users (lower(username));
+create unique index if not exists users_email_lower_idx on users (lower(email));
+
+create table if not exists auth_sessions (
+  token_hash text primary key,
+  user_id uuid not null references users(id) on delete cascade,
+  expires_at timestamptz not null
+);
+create index if not exists auth_sessions_user_id_idx on auth_sessions(user_id);
+create index if not exists auth_sessions_expires_at_idx on auth_sessions(expires_at);
+-- Credentials and sessions are only accessed by the trusted Express database role.
+alter table users enable row level security;
+alter table auth_sessions enable row level security;
+revoke all on users, auth_sessions from anon, authenticated;

@@ -9,6 +9,7 @@ healthRouter.get("/", (req, res) => {
     data: {
       status: "ok",
       dataProvider: env.dataProvider,
+      databaseConfigured: Boolean(env.databaseUrl),
       supabaseConfigured: Boolean(env.supabase.url && env.supabase.anonKey),
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),

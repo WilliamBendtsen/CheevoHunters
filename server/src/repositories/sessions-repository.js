@@ -80,15 +80,6 @@ export const sessionsRepository = {
         throw new Error(`Platform not found: ${session.platform}`);
       }
 
-      const { rows: hostRows } = await client.query(
-        "select id from users where display_name = $1 or username = $2 limit 1",
-        [session.host, session.host.toLowerCase()],
-      );
-
-      if (!hostRows[0]) {
-        throw new Error(`Host user not found: ${session.host}`);
-      }
-
       const sessionId = createNewId();
       await client.query(
         `
@@ -111,7 +102,7 @@ export const sessionsRepository = {
           sessionId,
           resolveGameId(session.gameId),
           platformRows[0].id,
-          hostRows[0].id,
+          session.hostUserId,
           session.title,
           session.description,
           session.requirements,
@@ -136,7 +127,7 @@ export const sessionsRepository = {
         [
           createNewId(),
           sessionId,
-          hostRows[0].id,
+          session.hostUserId,
           MEMBER_ROLES.host,
           MEMBER_STATUSES.joined,
         ],

@@ -4,9 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"vite\" \"nodemon --watch server --exec node server/index.js\"",
+    "dev": "concurrently \"vite\" \"nodemon --watch server --watch .env --ext js,mjs,cjs,json,env --exec node server/index.js\"",
     "dev:client": "vite",
-    "dev:server": "nodemon --watch server --exec node server/index.js",
+    "dev:server": "nodemon --watch server --watch .env --ext js,mjs,cjs,json,env --exec node server/index.js",
     "build": "vite build",
     "start": "node server/index.js",
     "test:server": "node --test server/tests/*.test.js",
@@ -22,7 +22,7 @@
     "pg": "^8.23.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-router-dom": "^6.30.6"
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.7.0",

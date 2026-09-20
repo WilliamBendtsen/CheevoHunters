@@ -1,3 +1,4 @@
+import { authRouter } from "./auth-routes.js";
 import { Router } from "express";
 
 import { gamesRouter } from "./games-routes.js";
@@ -13,3 +14,5 @@ apiRouter.use("/games", gamesRouter);
 apiRouter.use("/igdb", igdbRouter);
 apiRouter.use("/sessions", sessionsRouter);
 apiRouter.use("/users", usersRouter);
+
+apiRouter.use("/auth", authRouter);

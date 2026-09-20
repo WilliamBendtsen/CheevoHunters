@@ -1,3 +1,4 @@
+import { useAuth } from "../auth/AuthContext";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getDashboard } from "../api/client";
@@ -6,6 +7,7 @@ const getCoverStyle = (coverUrl) =>
   coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined;
 
 export default function UserDashboard() {
+  const { user } = useAuth();
   const [dashboard, setDashboard] = useState(null);
   const [status, setStatus] = useState("loading");
 
@@ -28,7 +30,7 @@ export default function UserDashboard() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [user.id]);
 
   if (status === "loading") {
     return <p className="api-state">Loading dashboard...</p>;
@@ -43,11 +45,11 @@ export default function UserDashboard() {
   return (
     <div className="dashboard-page">
       <section className="profile-summary">
-        <div className="profile-avatar" aria-label="PixelPulse avatar">
-          PP
+        <div className="profile-avatar" aria-label={`${user.username} avatar`}>
+          {user.username.slice(0, 2).toUpperCase()}
         </div>
         <div className="profile-meta">
-          <h1>PixelPulse</h1>
+          <h1>{user.displayName}</h1>
           <div className="profile-stats">
             <span>
               Sessions Joined: <strong>{stats.sessionsJoined}</strong>
@@ -75,6 +77,7 @@ export default function UserDashboard() {
           </div>
 
           <div className="upcoming-list">
+            {upcomingSessions.length === 0 && <p className="api-state">No sessions yet. <Link to="/create">Create your first session</Link>.</p>}
             {upcomingSessions.map((session) => (
               <article className="dashboard-session-card" key={session.title}>
                 <span
@@ -106,6 +109,7 @@ export default function UserDashboard() {
         <aside className="following-panel" aria-label="Following games">
           <h2>Following Games</h2>
           <div className="following-list">
+            {followingGames.length === 0 && <p>No followed games yet.</p>}
             {followingGames.map((game) => (
               <Link className="following-row" key={game.title} to={game.to}>
                 <span

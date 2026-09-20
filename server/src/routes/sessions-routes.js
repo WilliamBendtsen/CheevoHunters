@@ -1,3 +1,4 @@
+import { requireUser } from "../middleware/current-user.js";
 import { Router } from "express";
 
 import { sessionsController } from "../controllers/sessions-controller.js";
@@ -9,6 +10,7 @@ export const sessionsRouter = Router();
 sessionsRouter.get("/", asyncHandler(sessionsController.listSessions));
 sessionsRouter.post(
   "/",
+  requireUser,
   validateCreateSession,
   asyncHandler(sessionsController.createSession),
 );

@@ -1,3 +1,4 @@
+import { requestSecurity } from "./middleware/request-security.js";
 import express from "express";
 import cors from "cors";
 
@@ -13,9 +14,11 @@ export function createApp() {
   app.use(
     cors({
       origin: env.clientOrigin,
+      credentials: true,
     }),
   );
-  app.use(express.json());
+  app.use(requestSecurity);
+  app.use(express.json({ limit: "16kb" }));
   app.use(currentUser);
 
   app.get("/", (req, res) => {

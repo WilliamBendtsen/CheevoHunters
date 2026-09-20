@@ -2,12 +2,19 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 
 import { closeDb, db } from "../src/db/client.js";
+import { env } from "../src/config/env.js";
 import { createApp } from "../src/app.js";
 
 let server;
 let baseUrl;
+let cookie;
+let userId;
+const username = `test_${Date.now()}`;
+const password = "A long test password 123!";
+const headers = () => ({ "Content-Type": "application/json", Origin: env.clientOrigin, Cookie: cookie });
 
 before(async () => {
+  if (!env.databaseUrl) return;
   const app = createApp();
 
   await new Promise((resolve) => {
@@ -16,9 +23,17 @@ before(async () => {
 
   const { port } = server.address();
   baseUrl = `http://127.0.0.1:${port}`;
+  const response = await fetch(`${baseUrl}/api/auth/signup`, {
+    method: "POST", headers: { "Content-Type": "application/json", Origin: env.clientOrigin },
+    body: JSON.stringify({ username, email: `${username}@example.com`, password }),
+  });
+  assert.equal(response.status, 201);
+  cookie = response.headers.get("set-cookie").split(";")[0];
+  userId = (await response.json()).data.id;
 });
 
 after(async () => {
+  if (!env.databaseUrl) return;
   await new Promise((resolve, reject) => {
     server.close((error) => {
       if (error) {
@@ -32,10 +47,11 @@ after(async () => {
 
   await db.query("delete from sessions where title like 'Backend API test session%'");
   await db.query("delete from games where title like 'Backend API indexed game%'");
+  if (userId) await db.query("delete from users where id = $1", [userId]);
   await closeDb();
 });
 
-describe("CheevoHunters API", () => {
+describe("CheevoHunters API", { skip: !env.databaseUrl && "DATABASE_URL is required for database integration tests" }, () => {
   it("returns health metadata", async () => {
     const response = await fetch(`${baseUrl}/api/health`);
     const body = await response.json();
@@ -46,24 +62,21 @@ describe("CheevoHunters API", () => {
   });
 
   it("returns the current Supabase-backed user", async () => {
-    const response = await fetch(`${baseUrl}/api/users/me`);
+    const response = await fetch(`${baseUrl}/api/users/me`, { headers: headers() });
     const body = await response.json();
 
     assert.equal(response.status, 200);
-    assert.equal(body.data.username, "pixelpulse");
+    assert.equal(body.data.username, username);
   });
 
   it("returns Supabase-backed dashboard data", async () => {
-    const response = await fetch(`${baseUrl}/api/users/me/dashboard`);
+    const response = await fetch(`${baseUrl}/api/users/me/dashboard`, { headers: headers() });
     const body = await response.json();
 
     assert.equal(response.status, 200);
-    assert.ok(body.data.stats.gamesFollowed > 0);
-    assert.ok(body.data.followingGames.length > 0);
-    assert.match(
-      body.data.followingGames[0].coverUrl,
-      /^https:\/\/images\.igdb\.com/,
-    );
+    assert.equal(body.data.stats.gamesFollowed, 0);
+    assert.deepEqual(body.data.followingGames, []);
+    assert.deepEqual(body.data.upcomingSessions, []);
   });
 
   it("rejects short IGDB search queries before proxying", async () => {
@@ -92,9 +105,7 @@ describe("CheevoHunters API", () => {
     const igdbId = 900000 + Math.floor(Math.random() * 100000);
     const response = await fetch(`${baseUrl}/api/games/index`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: headers(),
       body: JSON.stringify({
         igdbId,
         title: `Backend API indexed game ${igdbId}`,
@@ -124,10 +135,10 @@ describe("CheevoHunters API", () => {
   it("creates a session using the current Supabase-backed user", async () => {
     const response = await fetch(`${baseUrl}/api/sessions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: headers(),
       body: JSON.stringify({
+        hostUserId: "00000000-0000-0000-0000-000000000000",
+        host: "PixelPulse",
         gameId: "1",
         title: `Backend API test session ${Date.now()}`,
         platform: "pc-steam",
@@ -140,16 +151,14 @@ describe("CheevoHunters API", () => {
 
     assert.equal(response.status, 201);
     assert.match(body.data.title, /^Backend API test session/);
-    assert.equal(body.data.host, "PixelPulse");
+    assert.equal(body.data.host, username);
     assert.equal(body.data.players, "1 / 4");
   });
 
   it("rejects invalid session payloads", async () => {
     const response = await fetch(`${baseUrl}/api/sessions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: headers(),
       body: JSON.stringify({
         gameId: "1",
         title: "",
@@ -167,3 +176,5 @@ describe("CheevoHunters API", () => {
     assert.equal(body.error.details.sessionType, "Choose a supported session type.");
   });
 });
+
+// These tests require a disposable database with the schema and demo seed applied.

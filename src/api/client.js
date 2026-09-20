@@ -42,11 +42,14 @@ export async function searchIgdbGames(query) {
 }
 
 async function apiRequest(path, options) {
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, credentials: "include" });
   const body = await response.json();
 
   if (!response.ok) {
-    throw new Error(body.error?.message ?? "API request failed.");
+    if (response.status === 401 && !path.startsWith("/auth/")) window.dispatchEvent(new Event("auth-expired"));
+    const error = new Error(body.error?.message ?? "API request failed.");
+    error.status = response.status;
+    throw error;
   }
 
   return body.data;
@@ -60,3 +63,11 @@ function toQueryString(params) {
 
   return queryString ? `?${queryString}` : "";
 }
+
+export const getCurrentUser = () => apiRequest("/users/me");
+const authRequest = (action, payload = {}) => apiRequest(`/auth/${action}`, {
+  method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+});
+export const signUp = (payload) => authRequest("signup", payload);
+export const signIn = (payload) => authRequest("login", payload);
+export const signOut = () => authRequest("logout");

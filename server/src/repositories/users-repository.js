@@ -1,22 +1,8 @@
 import { db } from "../db/client.js";
 import { toApiGameId, toApiSessionId } from "../db/legacy-id.js";
 import { toSessionTone, toSessionTypeLabel } from "../models/session-model.js";
-import { serializeUser } from "../serializers/user-serializer.js";
 
 export const usersRepository = {
-  async findMockCurrentUser() {
-    const { rows } = await db.query(
-      `
-        select id, username, display_name, email, avatar_url
-        from users
-        where username = 'pixelpulse'
-        limit 1
-      `,
-    );
-
-    return rows[0] ? serializeUser(toUserModel(rows[0])) : undefined;
-  },
-
   async findDashboard(userId) {
     const [stats, upcomingSessions, followingGames] = await Promise.all([
       findStats(userId),
@@ -121,14 +107,4 @@ async function findFollowingGames(userId) {
     enabled: row.notifications_enabled,
     coverUrl: row.cover_url,
   }));
-}
-
-function toUserModel(row) {
-  return {
-    id: row.id,
-    username: row.username,
-    displayName: row.display_name,
-    email: row.email,
-    avatarUrl: row.avatar_url,
-  };
 }

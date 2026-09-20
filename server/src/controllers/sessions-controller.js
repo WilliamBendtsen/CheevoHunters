@@ -16,7 +16,7 @@ export const sessionsController = {
   async createSession(req, res) {
     const session = await sessionsService.createSession({
       ...req.body,
-      host: req.user?.displayName,
+      hostUserId: req.user.id,
     });
 
     res.status(201).json({

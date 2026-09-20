@@ -45,7 +45,7 @@ export const sessionsService = {
       platform: payload.platform,
       time: payload.time ?? "Flexible Time",
       title: payload.title.trim(),
-      host: payload.host?.trim() || "PixelPulse",
+      hostUserId: payload.hostUserId,
       gameId: game.id,
       description: payload.description.trim(),
       requirements: payload.requirements?.trim() || "No specific requirements.",
