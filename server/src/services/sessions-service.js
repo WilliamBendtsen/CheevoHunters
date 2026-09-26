@@ -31,6 +31,15 @@ export const sessionsService = {
     return session;
   },
 
+  async sendMessage(sessionId, userId, payload) {
+    const message = payload?.message;
+    if (typeof message !== "string" || !message.trim() || message.length > 2000) {
+      throw createHttpError(400, "Message must contain 1–2000 characters.");
+    }
+    await sessionsService.getSession(sessionId);
+    return sessionsRepository.createMessage(sessionId, userId, message.trim());
+  },
+
   async createSession(payload) {
     const game = await gamesRepository.findRecordById(payload.gameId);
 

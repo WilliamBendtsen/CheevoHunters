@@ -153,6 +153,33 @@ describe("CheevoHunters API", { skip: !env.databaseUrl && "DATABASE_URL is requi
     assert.match(body.data.title, /^Backend API test session/);
     assert.equal(body.data.host, username);
     assert.equal(body.data.players, "1 / 4");
+
+    const sessionId = body.data.id;
+    const messageResponse = await fetch(`${baseUrl}/api/sessions/${sessionId}/messages`, {
+      method: "POST", headers: headers(),
+      body: JSON.stringify({ message: "  Ready to play!  ", userId: "someone-else", author: "Imposter" }),
+    });
+    assert.equal(messageResponse.status, 201);
+    const saved = (await messageResponse.json()).data;
+    assert.equal(saved.message, "Ready to play!");
+    assert.equal(saved.user.id, userId);
+    assert.equal(saved.author, username);
+    assert.ok(saved.createdAt);
+    const refreshed = await fetch(`${baseUrl}/api/sessions/${sessionId}`);
+    assert.deepEqual((await refreshed.json()).data.chat, [saved]);
+    const persisted = await db.query("select user_id, message from chat_messages where id = $1", [saved.id]);
+    assert.deepEqual(persisted.rows, [{ user_id: userId, message: "Ready to play!" }]);
+
+    for (const message of ["", "   ", 42, "x".repeat(2001)]) {
+      const invalid = await fetch(`${baseUrl}/api/sessions/${sessionId}/messages`, {
+        method: "POST", headers: headers(), body: JSON.stringify({ message }),
+      });
+      assert.equal(invalid.status, 400);
+    }
+    const missing = await fetch(`${baseUrl}/api/sessions/nonexistent-session/messages`, {
+      method: "POST", headers: headers(), body: JSON.stringify({ message: "Hello" }),
+    });
+    assert.equal(missing.status, 404);
   });
 
   it("rejects invalid session payloads", async () => {

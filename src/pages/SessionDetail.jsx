@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getSession } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
+import UserAvatar from "../components/UserAvatar";
+import { getSession, sendSessionMessage } from "../api/client";
 
 const getCoverStyle = (coverUrl) =>
   coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined;
 
 export default function SessionDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [chatError, setChatError] = useState("");
   const [session, setSession] = useState(null);
   const [status, setStatus] = useState("loading");
 
   useEffect(() => {
     let ignore = false;
+    setStatus("loading");
+    setDraft("");
+    setChatError("");
 
     getSession(id)
       .then((data) => {
@@ -30,6 +39,23 @@ export default function SessionDetail() {
       ignore = true;
     };
   }, [id]);
+
+  async function sendMessage(event) {
+    event.preventDefault();
+    if (sending || !draft.trim()) return;
+    setSending(true);
+    setChatError("");
+    try {
+      const message = await sendSessionMessage(id, draft);
+      setSession((current) => String(current?.id) === String(id)
+        ? { ...current, chat: [...current.chat, message] } : current);
+      setDraft("");
+    } catch (error) {
+      setChatError(error.message || "Could not send your message. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  }
 
   if (status === "loading") {
     return <p className="api-state">Loading session...</p>;
@@ -83,31 +109,36 @@ export default function SessionDetail() {
           <article className="chat-card">
             <h2>Coordination Chat</h2>
             <div className="chat-list">
+              {session.chat.length === 0 && <p>No messages yet. Start coordinating here.</p>}
               {session.chat.map((message) => (
                 <div
                   className="chat-message"
-                  key={`${message.author}-${message.time}-${message.message}`}
+                  key={message.id}
                 >
-                  <span className="chat-avatar" aria-hidden="true">
-                    {message.author.slice(0, 1)}
-                  </span>
+                  <UserAvatar user={message.user} className="chat-avatar" />
                   <div className="chat-copy">
                     <div>
                       <strong>{message.author}</strong>
-                      <span>{message.time}</span>
+                      <span>{message.time || new Date(message.createdAt).toLocaleString()}</span>
                     </div>
                     <p>{message.message}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <form className="chat-composer">
+            {chatError && <p role="alert">{chatError}</p>}
+            {!user && <p><Link to="/login">Sign in</Link> to send a message.</p>}
+            <form className="chat-composer" onSubmit={sendMessage}>
               <input
                 aria-label="Message"
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                maxLength={2000}
+                disabled={!user || sending}
                 placeholder="Type a message to coordinate..."
                 type="text"
               />
-              <button type="submit">Send</button>
+              <button type="submit" disabled={!user || sending || !draft.trim()}>{sending ? "Sending..." : "Send"}</button>
             </form>
           </article>
         </div>

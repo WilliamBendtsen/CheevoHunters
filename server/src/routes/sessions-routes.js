@@ -15,3 +15,9 @@ sessionsRouter.post(
   asyncHandler(sessionsController.createSession),
 );
 sessionsRouter.get("/:sessionId", asyncHandler(sessionsController.getSession));
+
+sessionsRouter.post(
+  "/:sessionId/messages",
+  requireUser,
+  asyncHandler(sessionsController.sendMessage),
+);

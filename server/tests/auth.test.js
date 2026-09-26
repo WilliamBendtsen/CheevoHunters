@@ -65,7 +65,7 @@ it("salts password hashes and rejects incorrect passwords", async () => {
 });
 it("keeps personal data and mutations behind authentication", async () => {
   for (const path of ["/users/me", "/users/me/dashboard"]) assert.equal((await fetch(baseUrl + path)).status, 401);
-  for (const path of ["/sessions", "/games/index"]) assert.equal((await post(path, {})).status, 401);
+  for (const path of ["/sessions", "/games/index", "/sessions/example/messages"]) assert.equal((await post(path, {})).status, 401);
   assert.equal((await fetch(baseUrl + "/users/me", { headers: { Cookie: "cheevo_session=malformed" } })).status, 401);
 });
 it("rejects cross-origin and non-JSON auth requests", async () => {

@@ -64,6 +64,16 @@ export const sessionsRepository = {
     return session;
   },
 
+  async createMessage(sessionId, userId, message) {
+    const { rows } = await db.query(
+      `insert into chat_messages (session_id, user_id, message)
+       values ($1, $2, $3) returning id`,
+      [resolveSessionId(sessionId), userId, message],
+    );
+    const session = await sessionsRepository.findById(sessionId);
+    return session.chat.find((item) => item.id === rows[0].id);
+  },
+
   async create(session) {
     const client = await db.connect();
 

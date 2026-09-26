@@ -18,6 +18,9 @@ export function serializeSession(session) {
     description: session.description,
     requirements: session.requirements,
     chat: session.chatMessages.map((message) => ({
+      id: message.id,
+      user: { id: message.user.id, username: message.user.username, displayName: message.user.displayName, avatarUrl: message.user.avatarUrl },
+      createdAt: message.createdAt,
       author: message.user.displayName,
       time: message.timeLabel,
       message: message.message,

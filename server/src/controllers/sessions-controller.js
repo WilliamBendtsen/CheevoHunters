@@ -13,6 +13,12 @@ export const sessionsController = {
     });
   },
 
+  async sendMessage(req, res) {
+    res.status(201).json({
+      data: await sessionsService.sendMessage(req.params.sessionId, req.user.id, req.body),
+    });
+  },
+
   async createSession(req, res) {
     const session = await sessionsService.createSession({
       ...req.body,

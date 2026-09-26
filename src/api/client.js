@@ -75,3 +75,9 @@ export const signOut = () => authRequest("logout");
 export const uploadAvatar = (file) => apiRequest("/users/me/avatar", {
   method: "PUT", headers: { "Content-Type": file.type }, body: file,
 });
+
+export const sendSessionMessage = (sessionId, message) => apiRequest(`/sessions/${sessionId}/messages`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ message }),
+});
