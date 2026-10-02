@@ -23,6 +23,15 @@ before(async () => {
       users.push(user); return { rows: [user] };
     }
     if (sql.startsWith("select * from users")) return { rows: users.filter(u => u.username === values[0] || u.email === values[0]) };
+    if (sql.includes("lower(username) like") && sql.includes("from users")) {
+      const [currentUserId, pattern] = values;
+      const needle = pattern.replaceAll("%", "").toLowerCase();
+      return {
+        rows: users
+          .filter(u => u.id !== currentUserId && (u.username.includes(needle) || u.display_name.includes(needle)))
+          .map(({ id, username, display_name, avatar_url }) => ({ id, username, display_name, avatar_url })),
+      };
+    }
     if (sql.startsWith("insert into auth_sessions")) { sessions.set(values[0], { userId: values[1], expires: values[2] }); return { rows: [] }; }
     if (sql.startsWith("delete from auth_sessions")) {
       sessions.delete(values[0]);
@@ -64,7 +73,7 @@ it("salts password hashes and rejects incorrect passwords", async () => {
   assert.equal(await verifyPassword("incorrect", a), false);
 });
 it("keeps personal data and mutations behind authentication", async () => {
-  for (const path of ["/users/me", "/users/me/dashboard"]) assert.equal((await fetch(baseUrl + path)).status, 401);
+  for (const path of ["/users/me", "/users/me/dashboard", "/users/search?q=hu"]) assert.equal((await fetch(baseUrl + path)).status, 401);
   for (const path of ["/sessions", "/games/index", "/sessions/example/messages"]) assert.equal((await post(path, {})).status, 401);
   assert.equal((await fetch(baseUrl + "/users/me", { headers: { Cookie: "cheevo_session=malformed" } })).status, 401);
 });
@@ -82,6 +91,15 @@ it("signs up, logs in by either identity, rotates sessions, and revokes logout",
   assert.match(response.headers.get("set-cookie"), /SameSite=Lax/);
   assert.equal(response.headers.get("cache-control"), "no-store");
   const original = cookieOf(response);
+  const teammate = await post("/auth/signup", { username: "helper", email: "helper@example.com", password: signup.password });
+  assert.equal(teammate.status, 201);
+  const shortSearch = await fetch(baseUrl + "/users/search?q=h", { headers: { Cookie: original } });
+  assert.deepEqual((await shortSearch.json()).data, []);
+  const userSearch = await fetch(baseUrl + "/users/search?q=help", { headers: { Cookie: original } });
+  const userResults = (await userSearch.json()).data;
+  assert.equal(userSearch.status, 200);
+  assert.deepEqual(userResults, [{ id: "2", username: "helper", displayName: "helper", avatarUrl: null }]);
+  assert.equal(userResults[0].email, undefined);
   assert.ok(sessions.has(hashToken(original.split("=")[1])));
   const me = await fetch(baseUrl + "/users/me", { headers: { Cookie: original } });
   assert.equal((await me.json()).data.id, user.id);

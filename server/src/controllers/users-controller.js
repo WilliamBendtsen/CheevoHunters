@@ -6,6 +6,12 @@ export const usersController = {
     res.json({ data: await avatarService.update(req.user.id, req.body) });
   },
 
+  async searchUsers(req, res) {
+    res.json({
+      data: await usersService.searchUsers(req.user, req.query.q),
+    });
+  },
+
   async getCurrentUser(req, res) {
     res.json({
       data: await usersService.getCurrentUser(req.user),

@@ -113,11 +113,16 @@ textarea {
   transform: translateX(-50%);
 }
 
+.site-search-wrap {
+  position: relative;
+  width: 280px;
+}
+
 .site-search {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 280px;
+  width: 100%;
   height: 34px;
   padding: 0 14px;
   border: 1px solid var(--panel-border);
@@ -137,6 +142,89 @@ textarea {
 
 .site-search input::placeholder {
   color: var(--quiet-text);
+}
+
+.site-search input:disabled {
+  cursor: not-allowed;
+}
+
+.search-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(360px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: #111216;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .42);
+}
+
+.search-message {
+  margin: 0;
+  padding: 13px 14px;
+  color: var(--muted-text);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.search-result + .search-result {
+  border-top: 1px solid rgba(255, 255, 255, .04);
+}
+
+.search-result-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #292657, #7c3aed 54%, #252833);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.search-result span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.search-result strong,
+.search-result small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-result strong {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.search-result small {
+  color: var(--muted-text);
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .search-icon {
@@ -1740,7 +1828,7 @@ main {
     justify-content: space-between;
   }
 
-  .site-search {
+  .site-search-wrap {
     flex: 1;
   }
 
@@ -1814,6 +1902,7 @@ main {
     bottom: -5px;
   }
 
+  .site-search-wrap,
   .site-search,
   .profile-link {
     width: 100%;

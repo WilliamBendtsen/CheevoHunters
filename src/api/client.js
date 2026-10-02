@@ -41,6 +41,10 @@ export async function searchIgdbGames(query) {
   return apiRequest(`/igdb/search${toQueryString({ q: query })}`);
 }
 
+export async function searchUsers(query, options = {}) {
+  return apiRequest(`/users/search${toQueryString({ q: query })}`, options);
+}
+
 async function apiRequest(path, options) {
   const response = await fetch(`${API_BASE_URL}${path}`, { ...options, credentials: "include" });
   const body = await response.json();

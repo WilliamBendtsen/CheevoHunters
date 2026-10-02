@@ -3,6 +3,10 @@ import { toApiGameId, toApiSessionId } from "../db/legacy-id.js";
 import { toSessionTone, toSessionTypeLabel } from "../models/session-model.js";
 
 export const usersRepository = {
+  async searchUsers(query, currentUserId) {
+    return searchUsers(query, currentUserId);
+  },
+
   async findDashboard(userId) {
     const [stats, upcomingSessions, followingGames] = await Promise.all([
       findStats(userId),
@@ -17,6 +21,44 @@ export const usersRepository = {
     };
   },
 };
+
+function escapeLike(value) {
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
+async function searchUsers(query, currentUserId) {
+  const search = query.trim().toLowerCase();
+  const escaped = escapeLike(search);
+  const { rows } = await db.query(
+    `
+      select id, username, display_name, avatar_url
+      from users
+      where id <> $1
+        and (
+          lower(username) like $2 escape '\\'
+          or lower(display_name) like $2 escape '\\'
+        )
+      order by
+        case
+          when lower(username) = $3 then 0
+          when lower(display_name) = $3 then 1
+          when lower(username) like $4 escape '\\' then 2
+          when lower(display_name) like $4 escape '\\' then 3
+          else 4
+        end,
+        username
+      limit 8
+    `,
+    [currentUserId, `%${escaped}%`, search, `${escaped}%`],
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    username: row.username,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url ?? null,
+  }));
+}
 
 async function findStats(userId) {
   const { rows } = await db.query(
